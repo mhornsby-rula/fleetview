@@ -179,8 +179,9 @@ async function readReport(cwd: string | null, sessionId: string): Promise<AgentR
       ? raw.done.filter((d: unknown) => typeof d === 'string' && d.trim()).map((d: string) => d.trim())
       : [];
     const now = typeof raw?.now === 'string' ? raw.now.trim() : '';
-    if (!now && !done.length) return null;
-    return { now: now || null, done, updatedAt: typeof raw?.updatedAt === 'string' ? raw.updatedAt : null };
+    const summary = typeof raw?.summary === 'string' ? raw.summary.trim() : '';
+    if (!now && !done.length && !summary) return null;
+    return { now: now || null, summary: summary || null, done, updatedAt: typeof raw?.updatedAt === 'string' ? raw.updatedAt : null };
   } catch {
     return null;
   }
@@ -344,6 +345,7 @@ export async function readDigest(
   const report = await readReport(opts.cwd ?? null, opts.sessionId ?? '');
   const empty: SessionDigest = {
     now: report?.now ?? null,
+    summary: report?.summary ?? null,
     reported: !!report,
     reportedAt: report?.updatedAt ?? null,
     doing: null, trail: [],
@@ -361,6 +363,7 @@ export async function readDigest(
     // The agent's own sentence wins; otherwise say what it's conceptually doing
     // rather than naming the tool — a command string is not an explanation.
     now: report?.now ?? describeActivity(trail),
+    summary: report?.summary ?? null,
     reported: !!report,
     reportedAt: report?.updatedAt ?? null,
     doing: trail[0] ?? null,

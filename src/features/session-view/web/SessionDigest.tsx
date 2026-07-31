@@ -1,37 +1,14 @@
 // The orientation panels for a session: enough to re-enter a session's context
 // after being away, without reading the transcript.
 //
-//   • NowPanel  — 1-3 sentences on the conceptual work in flight. Never a command.
-//   • DonePanel — the numbered running list of what this session has accomplished.
+//   • NowPanel     — 1-3 sentences on the conceptual work in flight.
+//   • SummaryPanel — agent-authored blurb of what the session has accomplished.
 //
-// Both prefer the agent's own account (`.fleetview/sessions/<id>.json`) and fall
-// back to what can be derived from the transcript.
-import { useEffect, useId, useMemo, useRef, useState } from 'react';
-import type { Milestone, SessionDigest } from '../shared/events';
+// Both read from `.fleetview/sessions/<id>.json`, with NowPanel falling back to
+// transcript-derived activity when no report file exists.
+import type { SessionDigest } from '../shared/events';
 import './SessionDigest.css';
 
-/** How many of the most recent entries stay visible while collapsed. */
-const COLLAPSED_COUNT = 5;
-
-function ago(at: string | null): string {
-  if (!at) return '';
-  const ms = Date.now() - new Date(at).getTime();
-  if (!Number.isFinite(ms) || ms < 0) return '';
-  const s = Math.round(ms / 1000);
-  if (s < 60) return `${s}s ago`;
-  const m = Math.round(s / 60);
-  if (m < 60) return `${m}m ago`;
-  return `${Math.round(m / 60)}h ago`;
-}
-
-const KIND_LABEL: Record<Milestone['kind'], string> = {
-  reported: '',
-  commit: 'commit',
-  task: 'task',
-  plan: 'plan',
-  compaction: 'compact',
-  subagent: 'agent',
-};
 
 export function NowPanel({ digest, live, status, waitingFor }: {
   digest: SessionDigest | null;
@@ -79,69 +56,15 @@ export function NowPanel({ digest, live, status, waitingFor }: {
   );
 }
 
-export function DonePanel({ digest, sessionId }: { digest: SessionDigest | null; sessionId?: string }) {
-  const items = useMemo(() => {
-    const list = digest?.done ?? [];
-    return digest?.reported ? [...list].reverse() : list;
-  }, [digest]);
-
-  const [expanded, setExpanded] = useState(false);
-  const bodyId = useId();
-
-  // Reset only when the session changes, so the 2.5s poll can't collapse what the
-  // user just opened (the same identity-latch discipline the task board uses).
-  const latched = useRef(sessionId);
-  useEffect(() => {
-    if (latched.current === sessionId) return;
-    latched.current = sessionId;
-    setExpanded(false);
-  }, [sessionId]);
-
-  const hidden = Math.max(0, items.length - COLLAPSED_COUNT);
-  const shown = expanded ? items : items.slice(0, COLLAPSED_COUNT);
-  const firstNumber = 1;
+export function SummaryPanel({ digest }: { digest: SessionDigest | null }) {
+  if (!digest?.summary) return null;
 
   return (
-    <section className="dg dg-done" aria-label="What this session has completed">
+    <section className="dg dg-summary" aria-label="Session summary">
       <div className="dg-head">
-        <h3>Done so far</h3>
-        {items.length > 0 && <span className="dg-count mono">{items.length}</span>}
-        {digest?.reported && <span className="dg-src" title="Maintained by the agent itself">self-reported</span>}
+        <h3>Summary</h3>
       </div>
-
-      {items.length === 0 ? (
-        <p className="dg-none">
-          Nothing yet. Agents that keep <code>.fleetview/sessions/&lt;id&gt;.json</code> current
-          list their progress here; otherwise commits and finished tasks appear.
-        </p>
-      ) : (
-        <>
-          <ol className="dg-list" id={bodyId} start={firstNumber}>
-            {shown.map((m, i) => (
-              <li key={firstNumber + i} className={`dg-item dg-${m.kind}`}>
-                <span className="dg-text">
-                  {m.text}
-                  {KIND_LABEL[m.kind] && <span className="dg-kind">{KIND_LABEL[m.kind]}</span>}
-                </span>
-                {m.at && <span className="dg-when">{ago(m.at)}</span>}
-              </li>
-            ))}
-          </ol>
-
-          {hidden > 0 && (
-            <button
-              type="button"
-              className="dg-toggle"
-              aria-expanded={expanded}
-              aria-controls={bodyId}
-              onClick={() => setExpanded(e => !e)}
-            >
-              <span className="dg-chevron" aria-hidden="true" />
-              {expanded ? 'Show recent only' : `Show all ${items.length}`}
-            </button>
-          )}
-        </>
-      )}
+      <p className="dg-prose">{digest.summary}</p>
     </section>
   );
 }

@@ -5,7 +5,7 @@ import type { IncomingMessage, ServerResponse } from 'node:http';
 import { stat } from 'node:fs/promises';
 import path from 'node:path';
 import type { ConfigRequest, ConfigResponse } from '../shared/config';
-import { addRepo, readConfig, removeRepo } from './config';
+import { addRepo, disableRepo, enableRepo, readConfig, removeRepo } from './config';
 
 function json(res: ServerResponse, code: number, body: ConfigResponse) {
   res.writeHead(code, { 'content-type': 'application/json' });
@@ -61,6 +61,19 @@ export async function handleConfigRoute(req: IncomingMessage, res: ServerRespons
       }
       if (body.action === 'remove') {
         json(res, 200, { ok: true, config: await removeRepo(target) });
+        return true;
+      }
+      if (body.action === 'enable') {
+        const reason = await validateAdd(target);
+        if (reason) {
+          json(res, 200, { ok: false, config: await readConfig(), reason });
+          return true;
+        }
+        json(res, 200, { ok: true, config: await enableRepo(target) });
+        return true;
+      }
+      if (body.action === 'disable') {
+        json(res, 200, { ok: true, config: await disableRepo(target) });
         return true;
       }
       json(res, 200, { ok: false, config: await readConfig(), reason: 'bad-request' });

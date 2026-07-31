@@ -360,9 +360,10 @@ export async function buildFleet(config: FleetConfig = {}): Promise<Fleet> {
   }));
 
   // --- 5. Bucket into projects. Watched repos are ADDITIVE, never a filter.
+  const enabled = new Set(config.enabledRepos ?? []);
   const byProject: Record<string, Project> = {};
   const mkProject = (key: string): Project =>
-    (byProject[key] ||= { path: key, name: path.basename(key) || key, sessions: [], live: false, activeTeammates: 0 });
+    (byProject[key] ||= { path: key, name: path.basename(key) || key, sessions: [], live: false, reportingEnabled: enabled.has(key), activeTeammates: 0 });
 
   for (const s of sessions) mkProject(s.cwd || '(unknown project)').sessions.push(s);
   for (const repo of config.repos ?? []) mkProject(repo);

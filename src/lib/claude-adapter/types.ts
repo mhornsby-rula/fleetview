@@ -125,6 +125,8 @@ export interface Project {
   path: string;
   name: string;
   live: boolean;
+  /** Whether FleetView session reporting is enabled for this repo. */
+  reportingEnabled: boolean;
   activeTeammates: number;
   sessions: Session[];
 }
@@ -138,6 +140,8 @@ export interface Fleet {
 export interface FleetConfig {
   /** Additional watched repo paths — always shown as projects (additive, not a filter). */
   repos?: string[];
+  /** Repos where session reporting is enabled. */
+  enabledRepos?: string[];
 }
 
 /**
@@ -233,6 +237,8 @@ export interface Milestone {
 export interface AgentReport {
   /** 1-3 sentences on the conceptual work in flight. */
   now: string | null;
+  /** 1-5 sentence summary of what this session has accomplished. */
+  summary: string | null;
   /** High-level things finished this session, oldest first. */
   done: string[];
   updatedAt: string | null;
@@ -246,6 +252,8 @@ export interface SessionDigest {
   /** 1-3 sentences on what's happening — the agent's own words when it reports
    *  them, else a conceptual description of recent activity. Never a command. */
   now: string | null;
+  /** 1-5 sentence summary of what this session has accomplished overall. */
+  summary: string | null;
   /** True when the agent maintains its own report (see AgentReport). */
   reported: boolean;
   reportedAt: string | null;

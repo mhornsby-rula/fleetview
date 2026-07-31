@@ -37,7 +37,7 @@ const server = createServer(async (req, res) => {
     const url = new URL(req.url || '/', 'http://localhost');
     if (url.pathname === '/api/fleet') {
       const cfg = await readConfig();
-      return send(res, 200, JSON.stringify(await readFleet({ repos: cfg.repos }, pendingSnapshot())));
+      return send(res, 200, JSON.stringify(await readFleet({ repos: cfg.repos, enabledRepos: cfg.enabledRepos }, pendingSnapshot())));
     }
     if (url.pathname === '/api/health') return send(res, 200, JSON.stringify({ ok: true, claude: claudeVersion() }));
     if (await handleConfigRoute(req, res)) return;

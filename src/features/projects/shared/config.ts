@@ -5,6 +5,8 @@
 export interface FleetViewConfig {
   /** Absolute repo paths FleetView monitors. Also feeds the adapter's FleetConfig.repos. */
   repos: string[];
+  /** Repos where FleetView session reporting is enabled (CLAUDE.md instruction injected). */
+  enabledRepos?: string[];
   /** Editor CLI used to open files from the UI (default "code"). e.g. "code", "cursor". */
   editor?: string;
   /** Server bind host. Default "127.0.0.1" (localhost only). Set "0.0.0.0" to expose on
@@ -12,10 +14,12 @@ export interface FleetViewConfig {
   host?: string;
 }
 
-/** POST /api/config request body. UI mutates via add/remove; server persists. */
+/** POST /api/config request body. UI mutates via add/remove/enable/disable; server persists. */
 export type ConfigRequest =
   | { action: 'add'; path: string }
-  | { action: 'remove'; path: string };
+  | { action: 'remove'; path: string }
+  | { action: 'enable'; path: string }
+  | { action: 'disable'; path: string };
 
 /** Uniform response for GET/POST /api/config (servers report; UI decides). */
 export interface ConfigResponse {

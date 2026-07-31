@@ -5,7 +5,7 @@ import { ProjectSwitcher } from '../features/projects/web';
 import { projectSlugs } from '../features/projects/shared/slug';
 import { Teammates } from '../features/teammates/web';
 import { TaskBoard } from '../features/task-board/web';
-import { SessionView, NowPanel, DonePanel } from '../features/session-view/web';
+import { SessionView, NowPanel, SummaryPanel } from '../features/session-view/web';
 import { HookSetup } from '../features/hooks/web';
 import { ThemeToggle } from '../features/theme/web/ThemeToggle';
 import { useVisiblePoll } from '../ui/useVisiblePoll';
@@ -299,7 +299,7 @@ function SessionPage({ repo, slug, sessionId, session }: { repo: string; slug: s
             status={session?.status}
             waitingFor={session?.waitingFor}
           />
-          <DonePanel digest={digest} sessionId={sessionId} />
+          <SummaryPanel digest={digest} />
           {session && session.tasks.length > 0 && (
             <section className="card">
               <div className="col">
